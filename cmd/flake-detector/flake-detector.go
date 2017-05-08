@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"github.com/aclevername/concourse-flake-detector/pipeline"
 	"flag"
+	"fmt"
 	"github.com/aclevername/concourse-flake-detector/httpclient"
-
+	"github.com/aclevername/concourse-flake-detector/pipeline"
 )
 
 func main() {
@@ -19,10 +18,7 @@ func main() {
 	var client pipeline.HTTPClient
 	client = new(httpclient.Client)
 
-
-	pipeline := pipeline.New(*url, *name, client)
+	pipeline, _ := pipeline.New(*url, *name, client)
 	fmt.Printf("\n----Result-----\nPipeline: %s\n", *name)
 	fmt.Printf("Job: %s, flakeyness: \n", pipeline.Jobs()[0].Name)
 }
-
-

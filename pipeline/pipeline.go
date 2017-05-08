@@ -3,7 +3,6 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
-
 )
 
 type Pipeline struct {
@@ -12,8 +11,8 @@ type Pipeline struct {
 }
 
 type Job struct {
-	Name   string
-	URL    string
+	Name string
+	URL  string
 }
 
 
@@ -21,16 +20,16 @@ type HTTPClient interface {
 	Get(string) ([]byte, error)
 }
 
-func New(url, name string, client HTTPClient) Pipeline {
-	response, _ := client.Get(fmt.Sprintf("%s/api/v1/pipelines/%s/jobs", url, name))
-	// if err != nil {
-	// 	panic("failed to form request")
-	// }
+func New(url, name string, client HTTPClient) (Pipeline, error) {
+	response, err := client.Get(fmt.Sprintf("%s/api/v1/pipelines/%s/jobs", url, name))
+	if err != nil {
+		return Pipeline{}, err
+	}
 
 	jobs := make([]Job, 0)
-	_ = json.Unmarshal(response, &jobs)
+	err = json.Unmarshal(response, &jobs)
 
-	return Pipeline{ jobs : jobs}
+	return Pipeline{jobs: jobs}, err
 }
 
 func (p *Pipeline) Jobs() []Job {
