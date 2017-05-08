@@ -15,7 +15,7 @@ type Job struct {
 	URL  string
 }
 
-
+//go:generate counterfeiter -o pipelinefakes/fake_httpclient.go . HTTPClient
 type HTTPClient interface {
 	Get(string) ([]byte, error)
 }
