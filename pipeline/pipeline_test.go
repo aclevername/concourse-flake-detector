@@ -10,53 +10,63 @@ import (
 
 var _ = Describe("Pipeline", func() {
 	Describe("New", func() {
-		var client *fakes.FakeHTTPClient
+		var (
+			client       *fakes.FakeHTTPClient
+			testPipeline pipeline.Pipeline
+			err          error
+		)
 
-		It("returns the pipeline", func() {
+		BeforeEach(func() {
 			client = new(fakes.FakeHTTPClient)
-			response := `[{"name":"job0","url":"/foo/bar"}, {"name":"job1","url":"/bar/baz"}, {"name":"job2","url":"/baz/foo"}]`
-			client.GetReturns([]byte(response), nil)
+		})
 
-			testPipeline, err := pipeline.New("test-concourse.com", "test-pipeline", client)
+		JustBeforeEach(func() {
+			testPipeline, err = pipeline.New("test-concourse.com", "test-pipeline", client)
+		})
 
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the get request succeeds", func() {
+			BeforeEach(func() {
+				response := `[{"name":"job0","url":"/foo/bar"}, {"name":"job1","url":"/bar/baz"}, {"name":"job2","url":"/baz/foo"}]`
+				client.GetReturns([]byte(response), nil)
+			})
+			It("returns the pipeline", func() {
 
-			By("calling the concourse endpoint")
-			Expect(client.GetCallCount()).To(Equal(1))
-			Expect(client.GetArgsForCall(0)).To(Equal("test-concourse.com/api/v1/pipelines/test-pipeline/jobs"))
+				Expect(err).NotTo(HaveOccurred())
 
-			jobs := testPipeline.Jobs()
+				By("calling the concourse endpoint")
+				Expect(client.GetCallCount()).To(Equal(1))
+				Expect(client.GetArgsForCall(0)).To(Equal("test-concourse.com/api/v1/pipelines/test-pipeline/jobs"))
 
-			By("containing the list of jobs")
-			Expect(len(jobs)).To(Equal(3))
-			Expect(jobs[0].Name).To(Equal("job0"))
-			Expect(jobs[0].URL).To(Equal("/foo/bar"))
-			Expect(jobs[1].Name).To(Equal("job1"))
-			Expect(jobs[1].URL).To(Equal("/bar/baz"))
-			Expect(jobs[2].Name).To(Equal("job2"))
-			Expect(jobs[2].URL).To(Equal("/baz/foo"))
+				jobs := testPipeline.Jobs()
 
+				By("containing the list of jobs")
+				Expect(len(jobs)).To(Equal(3))
+				Expect(jobs[0].Name).To(Equal("job0"))
+				Expect(jobs[0].URL).To(Equal("/foo/bar"))
+				Expect(jobs[1].Name).To(Equal("job1"))
+				Expect(jobs[1].URL).To(Equal("/bar/baz"))
+				Expect(jobs[2].Name).To(Equal("job2"))
+				Expect(jobs[2].URL).To(Equal("/baz/foo"))
+			})
 		})
 
 		Context("when the get request fails", func() {
-			It("returns an error", func() {
-				client = new(fakes.FakeHTTPClient)
+			BeforeEach(func() {
 				client.GetReturns(nil, errors.New("I failed"))
+			})
 
-				_, err := pipeline.New("test-concourse.com", "test-pipeline", client)
-
+			It("returns an error", func() {
 				Expect(err).To(MatchError("I failed"))
 			})
 		})
 
 		Context("when the reponse returns invalid json", func() {
-			It("returns the error", func() {
-				client = new(fakes.FakeHTTPClient)
+			BeforeEach(func() {
 				response := `defo not json`
 				client.GetReturns([]byte(response), nil)
+			})
 
-				_, err := pipeline.New("test-concourse.com", "test-pipeline", client)
-
+			It("returns the error", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
