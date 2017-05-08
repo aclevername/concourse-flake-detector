@@ -4,13 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/aclevername/concourse-flake-detector/job"
 )
 
 type Pipeline struct {
 	name string
-	jobs []job.Job
+	jobs []Job
 }
+
+type Job struct {
+	Name   string
+	URL    string
+}
+
 
 type HTTPClient interface {
 	Get(string) ([]byte, error)
@@ -22,13 +27,12 @@ func New(url, name string, client HTTPClient) Pipeline {
 	// 	panic("failed to form request")
 	// }
 
-	jobs := make([]job.Job, 0)
+	jobs := make([]Job, 0)
 	_ = json.Unmarshal(response, &jobs)
 
 	return Pipeline{ jobs : jobs}
 }
 
-func (p *Pipeline) Jobs() []job.Job {
+func (p *Pipeline) Jobs() []Job {
 	return p.jobs
-
 }
