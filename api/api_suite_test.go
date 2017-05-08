@@ -1,4 +1,4 @@
-package pipeline_test
+package api_test
 
 import (
 	. "github.com/onsi/ginkgo"

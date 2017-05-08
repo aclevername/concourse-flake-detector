@@ -1,27 +1,27 @@
-package pipeline_test
+package api_test
 
 import (
 	"errors"
-	"github.com/aclevername/concourse-flake-detector/pipeline"
-	fakes "github.com/aclevername/concourse-flake-detector/pipeline/pipelinefakes"
+	"github.com/aclevername/concourse-flake-detector/api"
+	fakes "github.com/aclevername/concourse-flake-detector/api/clientfake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Pipeline", func() {
-	Describe("New", func() {
+	Describe("NewPipeline", func() {
 		var (
-			client       *fakes.FakeHTTPClient
-			testPipeline pipeline.Pipeline
+			client       *fakes.FakeClient
+			testPipeline api.Pipeline
 			err          error
 		)
 
 		BeforeEach(func() {
-			client = new(fakes.FakeHTTPClient)
+			client = new(fakes.FakeClient)
 		})
 
 		JustBeforeEach(func() {
-			testPipeline, err = pipeline.New("test-concourse.com", "test-pipeline", client)
+			testPipeline, err = api.NewPipeline("test-concourse.com", "test-pipeline", client)
 		})
 
 		Context("when the get request succeeds", func() {

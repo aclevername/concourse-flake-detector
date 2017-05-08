@@ -1,4 +1,4 @@
-package pipeline
+package api
 
 import (
 	"encoding/json"
@@ -15,12 +15,7 @@ type Job struct {
 	URL  string
 }
 
-//go:generate counterfeiter -o pipelinefakes/fake_httpclient.go . HTTPClient
-type HTTPClient interface {
-	Get(string) ([]byte, error)
-}
-
-func New(url, name string, client HTTPClient) (Pipeline, error) {
+func NewPipeline(url, name string, client Client) (Pipeline, error) {
 	response, err := client.Get(fmt.Sprintf("%s/api/v1/pipelines/%s/jobs", url, name))
 	if err != nil {
 		return Pipeline{}, err
