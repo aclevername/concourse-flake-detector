@@ -15,7 +15,7 @@ type Job struct {
 	URL  string
 }
 
-func NewPipeline(url, name string, client Client) (Pipeline, error) {
+func GetPipeline(url, name string, client Client) (Pipeline, error) {
 	response, err := client.Get(fmt.Sprintf("%s/api/v1/pipelines/%s/jobs", url, name))
 	if err != nil {
 		return Pipeline{}, err

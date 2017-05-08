@@ -18,7 +18,7 @@ func main() {
 	var client api.Client
 	client = new(httpclient.Client)
 
-	pipeline, _ := api.NewPipeline(*url, *name, client)
+	pipeline, _ := api.GetPipeline(*url, *name, client)
 	fmt.Printf("\n----Result-----\nPipeline: %s\n", *name)
 	fmt.Printf("Job: %s, flakeyness: \n", pipeline.Jobs()[0].Name)
 }

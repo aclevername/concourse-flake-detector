@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("Pipeline", func() {
-	Describe("NewPipeline", func() {
+	Describe("GetPipeline", func() {
 		var (
 			client       *fakes.FakeClient
 			testPipeline api.Pipeline
@@ -21,7 +21,7 @@ var _ = Describe("Pipeline", func() {
 		})
 
 		JustBeforeEach(func() {
-			testPipeline, err = api.NewPipeline("test-concourse.com", "test-pipeline", client)
+			testPipeline, err = api.GetPipeline("test-concourse.com", "test-pipeline", client)
 		})
 
 		Context("when the get request succeeds", func() {
