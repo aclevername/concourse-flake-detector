@@ -3,7 +3,7 @@ package api_test
 import (
 	"errors"
 	"github.com/aclevername/concourse-flake-detector/api"
-	fakes "github.com/aclevername/concourse-flake-detector/api/clientfake"
+	"github.com/aclevername/concourse-flake-detector/api/clientfake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -11,13 +11,13 @@ import (
 var _ = Describe("Pipeline", func() {
 	Describe("GetPipeline", func() {
 		var (
-			client       *fakes.FakeClient
+			client       *clientfake.FakeClient
 			testPipeline api.Pipeline
 			err          error
 		)
 
 		BeforeEach(func() {
-			client = new(fakes.FakeClient)
+			client = new(clientfake.FakeClient)
 		})
 
 		JustBeforeEach(func() {
