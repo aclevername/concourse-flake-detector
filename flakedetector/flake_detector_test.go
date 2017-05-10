@@ -35,14 +35,27 @@ var _ = Describe("flakedetector", func() {
 					},
 				},
 			}
+			runThree := historybuilder.Run{
+				Status: "failed",
+				Resources: historybuilder.Resource{
+					Inputs: []historybuilder.Input{
+						historybuilder.Input{
+							Version: historybuilder.Ref{
+								Ref: "version1",
+							},
+						},
+					},
+				},
+			}
 			runs := []historybuilder.Run{
 				runOne,
 				runTwo,
+				runThree,
 			}
 			occurences, err := flakedetector.Detect(runs)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(occurences).To(Equal("1"))
+			Expect(occurences).To(Equal(2))
 		})
 	})
 })

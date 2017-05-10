@@ -11,16 +11,17 @@ type Pipeline struct {
 }
 
 type Job struct {
-	Name string
-	URL  string
+	Name string `json:"name"`
+	URL  string `json:"api_url"`
 }
 
 func GetPipeline(url, name string, client Client) (Pipeline, error) {
-	response, err := client.Get(fmt.Sprintf("%s/api/v1/pipelines/%s/jobs", url, name))
+	response, err := client.Get(fmt.Sprintf("api/v1/pipelines/%s/jobs", name))
 	if err != nil {
 		return Pipeline{}, err
 	}
 
+	fmt.Println("++++++++++" + string(response))
 	jobs := make([]Job, 0)
 	err = json.Unmarshal(response, &jobs)
 

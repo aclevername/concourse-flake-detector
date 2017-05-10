@@ -33,7 +33,7 @@ type JSONBuild struct {
 }
 
 func GetJobHistory(client api.Client, job api.Job) ([]Run, error) {
-	response, err := client.Get(fmt.Sprintf("api/v1%s/builds", job.URL))
+	response, err := client.Get(fmt.Sprintf("%s/builds", job.URL[1:])) //TODO fix
 	if err != nil {
 		return []Run{}, err
 	}
@@ -45,7 +45,7 @@ func GetJobHistory(client api.Client, job api.Job) ([]Run, error) {
 	}
 	var history []Run
 	for _, build := range builds {
-		response, err := client.Get(build.APIURL + "/resources")
+		response, err := client.Get(build.APIURL[1:] + "/resources") //TODO fix
 		if err != nil {
 			return []Run{}, err
 		}

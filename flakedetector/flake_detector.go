@@ -1,37 +1,53 @@
 package flakedetector
 
-import "github.com/aclevername/concourse-flake-detector/historybuilder"
+import (
+	"fmt"
+	"github.com/aclevername/concourse-flake-detector/historybuilder"
+)
 
 type result struct {
-	passedCount int
+	passed      bool
 	failedCount int
 }
 
 func Detect(runs []historybuilder.Run) (int, error) {
-	resourceMap := map[[]historybuilder.Input]result{}
+	resourceMap := map[string]*result{}
+	fmt.Println("-----------")
 	for _, value := range runs {
-		// if my map doesn't contain the runs resource input then add it and that pass/fail state
-		if _, ok := resourceMap[value.Resources.Inputs]; !ok {
-			//do something here
+		fmt.Println(value)
+
+		inputKey := inputArrayToString(value.Resources.Inputs)
+		if _, ok := resourceMap[inputKey]; !ok {
 			if value.Status == "failed" {
-				resourceMap[value.Resources.Inputs] = result{passedCount: 1}
+				fmt.Println("a")
+
+				resourceMap[inputKey] = &result{failedCount: 1, passed: false}
 			} else {
-				resourceMap[value.Resources.Inputs] = result{failedCount: 1}
+				fmt.Println("b")
+				resourceMap[inputKey] = &result{failedCount: 0, passed: true}
 			}
 		} else {
 			if value.Status == "failed" {
-				resourceMap[value.Resources.Inputs].passedCount++
+				resourceMap[inputKey].failedCount++
 			} else {
-				resourceMap[value.Resources.Inputs].failedCount++
+				resourceMap[inputKey].passed = true
 			}
 		}
 	}
+
 	flakeCount := 0
 	for _, value := range resourceMap {
-		if value.failedCount != 0 && value.passedCount != 0 {
-			flakeCount++
+		if value.passed {
+			flakeCount += value.failedCount
 		}
 	}
-
 	return flakeCount, nil
+}
+
+func inputArrayToString(input []historybuilder.Input) string {
+	var content string
+	for _, value := range input {
+		content += value.Version.Ref
+	}
+	return content
 }
