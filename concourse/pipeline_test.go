@@ -1,9 +1,10 @@
-package api_test
+package concourse_test
 
 import (
 	"errors"
-	"github.com/aclevername/concourse-flake-detector/api"
-	"github.com/aclevername/concourse-flake-detector/api/clientfake"
+
+	"github.com/aclevername/concourse-flake-detector/concourse"
+	"github.com/aclevername/concourse-flake-detector/concourse/fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -11,31 +12,34 @@ import (
 var _ = Describe("Pipeline", func() {
 	Describe("GetPipeline", func() {
 		var (
-			client       *clientfake.FakeClient
-			testPipeline api.Pipeline
+			fakeGet      *fake.FakeGetter
+			client       concourse.ClientInterface
+			testPipeline concourse.Pipeline
 			err          error
 		)
 
 		BeforeEach(func() {
-			client = new(clientfake.FakeClient)
+			fakeGet = new(fake.FakeGetter)
+			client = concourse.NewClient(fakeGet.Spy, "example.com", "")
 		})
 
 		JustBeforeEach(func() {
-			testPipeline, err = api.GetPipeline("test-concourse.com", "test-pipeline", client)
+			testPipeline, err = client.GetPipeline("test-pipeline")
 		})
 
 		Context("when the get request succeeds", func() {
 			BeforeEach(func() {
 				response := `[{"name":"job0","api_url":"/foo/bar"}, {"name":"job1","api_url":"/bar/baz"}, {"name":"job2","api_url":"/baz/foo"}]`
-				client.GetReturns([]byte(response), nil)
+				fakeGet.Returns([]byte(response), nil)
 			})
+
 			It("returns the pipeline", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 
 				By("calling the concourse endpoint")
-				Expect(client.GetCallCount()).To(Equal(1))
-				Expect(client.GetArgsForCall(0)).To(Equal("api/v1/pipelines/test-pipeline/jobs"))
+				Expect(fakeGet.CallCount()).To(Equal(1))
+				Expect(fakeGet.ArgsForCall(0)).To(Equal("example.com/api/v1/pipelines/test-pipeline/jobs"))
 
 				jobs := testPipeline.Jobs()
 
@@ -52,7 +56,7 @@ var _ = Describe("Pipeline", func() {
 
 		Context("when the get request fails", func() {
 			BeforeEach(func() {
-				client.GetReturns(nil, errors.New("I failed"))
+				fakeGet.Returns(nil, errors.New("I failed"))
 			})
 
 			It("returns an error", func() {
@@ -63,7 +67,7 @@ var _ = Describe("Pipeline", func() {
 		Context("when the reponse returns invalid json", func() {
 			BeforeEach(func() {
 				response := `defo not json`
-				client.GetReturns([]byte(response), nil)
+				fakeGet.Returns([]byte(response), nil)
 			})
 
 			It("returns the error", func() {

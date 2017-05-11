@@ -2,6 +2,7 @@ package mockconcourse
 
 import (
 	"fmt"
+
 	"github.com/pivotal-cf/on-demand-service-broker/mockhttp"
 )
 

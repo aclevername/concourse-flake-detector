@@ -2,7 +2,8 @@ package flakedetector
 
 import (
 	"fmt"
-	"github.com/aclevername/concourse-flake-detector/historybuilder"
+
+	"github.com/aclevername/concourse-flake-detector/concourse"
 )
 
 type result struct {
@@ -10,7 +11,7 @@ type result struct {
 	failedCount int
 }
 
-func Detect(runs []historybuilder.Run) (int, error) {
+func Detect(runs []concourse.Run) (int, error) {
 	resourceMap := map[string]*result{}
 	fmt.Println("-----------")
 	for _, value := range runs {
@@ -44,7 +45,7 @@ func Detect(runs []historybuilder.Run) (int, error) {
 	return flakeCount, nil
 }
 
-func inputArrayToString(input []historybuilder.Input) string {
+func inputArrayToString(input []concourse.Input) string {
 	var content string
 	for _, value := range input {
 		content += value.Version.Ref

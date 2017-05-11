@@ -5,13 +5,14 @@ import (
 	. "github.com/onsi/gomega"
 
 	"fmt"
+	"io"
+	"os/exec"
+	"time"
+
 	"github.com/aclevername/concourse-flake-detector/mockconcourse"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/on-demand-service-broker/mockhttp"
-	"io"
-	"os/exec"
-	"time"
 )
 
 var _ = Describe("flake-detector", func() {
@@ -32,18 +33,7 @@ var _ = Describe("flake-detector", func() {
 			jobName := "test-job"
 			pipelineName := "test-pipeline"
 
-			//client.GetReturnsOnCall(1, []byte(fmt.Sprintf(gitResourcewithVersion, "version1")), nil)
-			//
-			//client.GetReturnsOnCall(2, []byte(fmt.Sprintf(gitResourcewithVersion, "version1")), nil)
-			//
-			//history, err := historybuilder.GetJobHistory(client, testJob)
-			//
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(client.GetCallCount()).To(Equal(3))
-			//Expect(client.GetArgsForCall(1)).To(Equal("/api/v1/builds/1/resources"))
-			//Expect(client.GetArgsForCall(2)).To(Equal("/api/v1/builds/2/resources"))
-
-			buildList := `[{"status":"succeeded","api_url":"/api/v1/builds/1"},{"status":"failed","api_url":"/api/v1/builds/2"}]`
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
 
 			const gitResourcewithVersion = `
 			{
@@ -62,7 +52,7 @@ var _ = Describe("flake-detector", func() {
 `
 			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
-				mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, jobUrl),
+				mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v2")),
@@ -81,24 +71,13 @@ var _ = Describe("flake-detector", func() {
 			jobName := "test-job"
 			pipelineName := "test-pipeline"
 
-			//client.GetReturnsOnCall(1, []byte(fmt.Sprintf(gitResourcewithVersion, "version1")), nil)
-			//
-			//client.GetReturnsOnCall(2, []byte(fmt.Sprintf(gitResourcewithVersion, "version1")), nil)
-			//
-			//history, err := historybuilder.GetJobHistory(client, testJob)
-			//
-			//Expect(err).NotTo(HaveOccurred())
-			//Expect(client.GetCallCount()).To(Equal(3))
-			//Expect(client.GetArgsForCall(1)).To(Equal("/api/v1/builds/1/resources"))
-			//Expect(client.GetArgsForCall(2)).To(Equal("/api/v1/builds/2/resources"))
-
-			buildList := `[{"status":"succeeded","api_url":"/api/v1/builds/1"},{"status":"failed","api_url":"/api/v1/builds/2"}]`
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
 
 			const gitResourcewithVersion = `
 			{
 	"inputs": [
 		{
-			"name": "concourse",
+			"name": "concourse",gi
 			"resource": "concourse",
 			"type": "git",
 			"version": {
@@ -111,7 +90,7 @@ var _ = Describe("flake-detector", func() {
 `
 			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
-				mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, jobUrl),
+				mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),

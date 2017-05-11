@@ -1,4 +1,4 @@
-package api
+package concourse
 
 import (
 	"encoding/json"
@@ -15,13 +15,12 @@ type Job struct {
 	URL  string `json:"api_url"`
 }
 
-func GetPipeline(url, name string, client Client) (Pipeline, error) {
-	response, err := client.Get(fmt.Sprintf("api/v1/pipelines/%s/jobs", name))
+func (c *client) GetPipeline(name string) (Pipeline, error) {
+	response, err := c.get(fmt.Sprintf("%s/pipelines/%s/jobs", c.teamURL, name))
 	if err != nil {
 		return Pipeline{}, err
 	}
 
-	fmt.Println("++++++++++" + string(response))
 	jobs := make([]Job, 0)
 	err = json.Unmarshal(response, &jobs)
 
