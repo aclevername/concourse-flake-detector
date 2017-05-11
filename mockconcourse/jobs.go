@@ -10,9 +10,17 @@ type jobsMock struct {
 	*mockhttp.Handler
 }
 
-func JobsForPipeline(pipeline string) *jobsMock {
-	return &jobsMock{
-		mockhttp.NewMockedHttpRequest("GET", fmt.Sprintf("/api/v1/pipelines/%s/jobs", pipeline)),
+func JobsForPipeline(pipeline, team string) *jobsMock {
+	if team == "" {
+
+		return &jobsMock{
+			mockhttp.NewMockedHttpRequest("GET", fmt.Sprintf("/api/v1/pipelines/%s/jobs", pipeline)),
+		}
+	} else {
+
+		return &jobsMock{
+			mockhttp.NewMockedHttpRequest("GET", fmt.Sprintf("/api/v1/teams/%s/pipelines/%s/jobs", team, pipeline)),
+		}
 	}
 }
 

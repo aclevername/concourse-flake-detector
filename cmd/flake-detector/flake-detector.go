@@ -15,6 +15,8 @@ import (
 func main() {
 	url := flag.String("url", "", "concourse url")
 	name := flag.String("pipeline", "", "pipeline name")
+	team := flag.String("team", "", "team name, optional")
+
 	flag.Parse()
 	fmt.Printf("configuration: url %s, pipeline %s\n", *url, *name)
 	if *url == "" || *name == "" {
@@ -30,7 +32,7 @@ func main() {
 		buffer.ReadFrom(response.Body)
 
 		return buffer.Bytes(), err
-	}, *url, "")
+	}, *url, *team)
 
 	pipeline, err := client.GetPipeline(*name)
 
