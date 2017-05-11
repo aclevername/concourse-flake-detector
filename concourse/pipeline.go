@@ -17,7 +17,6 @@ type Job struct {
 
 func (c *client) GetPipeline(name string) (Pipeline, error) {
 	response, err := c.get(fmt.Sprintf("%s/pipelines/%s/jobs", c.teamURL, name))
-	fmt.Println(string(response))
 	if err != nil {
 		return Pipeline{}, err
 	}
