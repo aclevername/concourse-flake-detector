@@ -12,11 +12,12 @@ type Pipeline struct {
 
 type Job struct {
 	Name string `json:"name"`
-	URL  string `json:"api_url"`
+	URL  string `json:"url"`
 }
 
 func (c *client) GetPipeline(name string) (Pipeline, error) {
 	response, err := c.get(fmt.Sprintf("%s/pipelines/%s/jobs", c.teamURL, name))
+	fmt.Println(string(response))
 	if err != nil {
 		return Pipeline{}, err
 	}

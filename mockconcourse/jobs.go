@@ -25,5 +25,5 @@ func JobsForPipeline(pipeline, team string) *jobsMock {
 }
 
 func (j *jobsMock) RespondsWithJob(name, url string) *mockhttp.Handler {
-	return j.RespondsOKWith(fmt.Sprintf(`[{"name":"%s","api_url":"%s"}]`, name, url))
+	return j.RespondsOKWith(fmt.Sprintf(`[{"name":"%s","url":"%s"}]`, name, url))
 }

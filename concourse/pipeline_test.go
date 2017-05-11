@@ -29,7 +29,7 @@ var _ = Describe("Pipeline", func() {
 
 		Context("when the get request succeeds", func() {
 			BeforeEach(func() {
-				response := `[{"name":"job0","api_url":"/foo/bar"}, {"name":"job1","api_url":"/bar/baz"}, {"name":"job2","api_url":"/baz/foo"}]`
+				response := `[{"name":"job0","url":"/foo/bar"}, {"name":"job1","url":"/bar/baz"}, {"name":"job2","url":"/baz/foo"}]`
 				fakeGet.Returns([]byte(response), nil)
 			})
 

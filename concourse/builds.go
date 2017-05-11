@@ -11,6 +11,7 @@ type Build struct {
 }
 
 func (c *client) GetBuilds(job Job) ([]Build, error) {
+	fmt.Println("request: %s", fmt.Sprintf("%s/builds", job.URL))
 	response, err := c.get(fmt.Sprintf("%s/builds", job.URL))
 	if err != nil {
 		return []Build{}, err

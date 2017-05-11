@@ -14,6 +14,7 @@ type Getter func(string) ([]byte, error)
 
 type client struct {
 	get     func(string) ([]byte, error)
+	baseURL string
 	url     string
 	teamURL string
 }
@@ -29,6 +30,7 @@ func NewClient(get Getter, baseURL, team string) *client {
 	return &client{
 		get:     get,
 		url:     url,
+		baseURL: baseURL,
 		teamURL: teamURL,
 	}
 }
