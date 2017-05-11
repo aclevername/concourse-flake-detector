@@ -21,29 +21,6 @@ func main() {
 		panic("please configure correctly using -url and -pipeline")
 	}
 
-	//client := &realClient{
-	//	BaseURL: *url,
-	//}
-	//
-	//pipeline, _ := concourse.GetPipeline(*url, *name, client)
-	//
-	//fmt.Println("------------------")
-	//
-	//fmt.Println(pipeline.Jobs()[0].URL)
-	//fmt.Println(pipeline.Jobs()[0].Name)
-	//jobHistory, err := historybuilder.GetJobHistory(client, pipeline.Jobs()[0])
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//jobFlakeCount, err := flakedetector.Detect(jobHistory)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//fmt.Printf("\n----Result-----\nPipeline: %s\n", *name)
-	//fmt.Printf("Job: %s, flakeyness: %d\n", pipeline.Jobs()[0].Name, jobFlakeCount)
-
 	client := concourse.NewClient(func(url string) ([]byte, error) {
 		response, err := http.Get(url)
 		if err != nil {
@@ -61,10 +38,6 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("------------------")
-
-	fmt.Println(pipeline.Jobs()[0].URL)
-	fmt.Println(pipeline.Jobs()[0].Name)
 	jobHistory, err := historybuilder.GetJobHistory(client, pipeline.Jobs()[0])
 	if err != nil {
 		panic(err)

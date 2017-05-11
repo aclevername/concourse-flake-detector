@@ -1,8 +1,6 @@
 package flakedetector
 
 import (
-	"fmt"
-
 	"github.com/aclevername/concourse-flake-detector/concourse"
 )
 
@@ -13,18 +11,12 @@ type result struct {
 
 func Detect(runs []concourse.Run) (int, error) {
 	resourceMap := map[string]*result{}
-	fmt.Println("-----------")
 	for _, value := range runs {
-		fmt.Println(value)
-
 		inputKey := inputArrayToString(value.Resources.Inputs)
 		if _, ok := resourceMap[inputKey]; !ok {
 			if value.Status == "failed" {
-				fmt.Println("a")
-
 				resourceMap[inputKey] = &result{failedCount: 1, passed: false}
 			} else {
-				fmt.Println("b")
 				resourceMap[inputKey] = &result{failedCount: 0, passed: true}
 			}
 		} else {
