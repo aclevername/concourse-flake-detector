@@ -17,7 +17,7 @@ var _ = Describe("GetBuilds", func() {
 
 		buildList := `[{"status":"succeeded","api_url":"/concourse/v1/builds/1"},{"status":"failed","api_url":"/concourse/v1/builds/2"}]`
 		fakeGet.Returns([]byte(buildList), nil)
-		builds, err := client.GetBuilds(concourse.Job{URL: "example.com/api/v1/foo/job"})
+		builds, err := client.GetBuilds(concourse.Job{URL: "/api/v1/foo/job"})
 		Expect(err).NotTo(HaveOccurred())
 		Expect(fakeGet.ArgsForCall(0)).To(Equal("example.com/api/v1/foo/job/builds"))
 		Expect(builds).To(Equal([]concourse.Build{

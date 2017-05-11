@@ -52,7 +52,7 @@ var _ = Describe("flake-detector", func() {
 `
 			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
-				mockconcourse.JobsForPipeline(pipelineName, "").RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
+				mockconcourse.JobsForPipeline(pipelineName, "").RespondsWithJob(jobName, fmt.Sprintf("%s", jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v2")),
@@ -90,7 +90,7 @@ var _ = Describe("flake-detector", func() {
 `
 			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
-				mockconcourse.JobsForPipeline(pipelineName, "").RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
+				mockconcourse.JobsForPipeline(pipelineName, "").RespondsWithJob(jobName, fmt.Sprintf("%s", jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
@@ -132,7 +132,7 @@ var _ = Describe("flake-detector", func() {
 
 			jobUrl := fmt.Sprintf("/api/v1/teams/foo/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
-				mockconcourse.JobsForPipeline(pipelineName, team).RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
+				mockconcourse.JobsForPipeline(pipelineName, team).RespondsWithJob(jobName, fmt.Sprintf("%s", jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v2")),
