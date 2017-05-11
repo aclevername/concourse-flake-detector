@@ -1,11 +1,12 @@
 package mockconcourse
 
 import (
-	"github.com/pivotal-cf/on-demand-service-broker/mockhttp"
 	"fmt"
+
+	"github.com/pivotal-cf/on-demand-service-broker/mockhttp"
 )
 
-type jobsMock struct{
+type jobsMock struct {
 	*mockhttp.Handler
 }
 
@@ -16,18 +17,5 @@ func JobsForPipeline(pipeline string) *jobsMock {
 }
 
 func (j *jobsMock) RespondsWithJob(name, url string) *mockhttp.Handler {
-	job := struct {
-		Name string
-		url string
-	}{Name: name, url: url}
-
-	var listJobs []struct {
-		Name string
-		url string
-	}
-
-	listJobs = append(listJobs, job)
-	return j.RespondsOKWithJSON(listJobs)
+	return j.RespondsOKWith(fmt.Sprintf(`[{"name":"%s","api_url":"%s"}]`, name, url))
 }
-
-

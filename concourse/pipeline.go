@@ -1,4 +1,4 @@
-package api
+package concourse
 
 import (
 	"encoding/json"
@@ -11,12 +11,12 @@ type Pipeline struct {
 }
 
 type Job struct {
-	Name string
-	URL  string
+	Name string `json:"name"`
+	URL  string `json:"api_url"`
 }
 
-func GetPipeline(url, name string, client Client) (Pipeline, error) {
-	response, err := client.Get(fmt.Sprintf("%s/api/v1/pipelines/%s/jobs", url, name))
+func (c *client) GetPipeline(name string) (Pipeline, error) {
+	response, err := c.get(fmt.Sprintf("%s/pipelines/%s/jobs", c.teamURL, name))
 	if err != nil {
 		return Pipeline{}, err
 	}

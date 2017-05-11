@@ -1,4 +1,4 @@
-package api_test
+package concourse_test
 
 import (
 	. "github.com/onsi/ginkgo"

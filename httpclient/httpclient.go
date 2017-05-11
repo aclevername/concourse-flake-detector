@@ -1,12 +1,11 @@
 package httpclient
 
 import (
-	"net/http"
 	"bytes"
+	"net/http"
 )
 
-type Client struct{
-
+type Client struct {
 }
 
 func (c *Client) Get(url string) ([]byte, error) {

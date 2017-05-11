@@ -4,13 +4,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"fmt"
+	"io"
+	"os/exec"
+	"time"
+
 	"github.com/aclevername/concourse-flake-detector/mockconcourse"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/on-demand-service-broker/mockhttp"
-	"io"
-	"os/exec"
-	"time"
 )
 
 var _ = Describe("flake-detector", func() {
@@ -25,17 +27,84 @@ var _ = Describe("flake-detector", func() {
 		concourse.Close()
 	})
 
-	It("lists the jobs", func() {
-		jobName := "test-job"
-		pipelineName := "test-pipeline"
-		concourse.AppendMocks(mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, "test-job-url"))
-		params := []string{"-url", concourse.URL, "-pipeline", pipelineName}
-		_, logBuffer := runFlakeDetector(params...)
+	Context("when the job has 1 flakey run", func() {
 
-		Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-		Expect(logBuffer).To(gbytes.Say("Job: %s, flakeyness: ", jobName))
+		It("lists the jobs", func() {
+			jobName := "test-job"
+			pipelineName := "test-pipeline"
+
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
+
+			const gitResourcewithVersion = `
+			{
+	"inputs": [
+		{
+			"name": "concourse",
+			"resource": "concourse",
+			"type": "git",
+			"version": {
+				"ref": "%s"
+			},
+		  "pipeline_id": 1
+		}
+	]
+}
+`
+			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
+			concourse.AppendMocks(
+				mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
+				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
+				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
+				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v2")),
+			)
+			params := []string{"-url", concourse.URL, "-pipeline", pipelineName}
+			_, logBuffer := runFlakeDetector(params...)
+
+			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
+			Expect(logBuffer).To(gbytes.Say("Job: %s, flakeyness: 0", jobName))
+
+		})
+	})
+
+	Context("when the job has no flakey runs", func() {
+		It("lists the jobs", func() {
+			jobName := "test-job"
+			pipelineName := "test-pipeline"
+
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
+
+			const gitResourcewithVersion = `
+			{
+	"inputs": [
+		{
+			"name": "concourse",
+			"resource": "concourse",
+			"type": "git",
+			"version": {
+				"ref": "%s"
+			},
+		  "pipeline_id": 1
+		}
+	]
+}
+`
+			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
+			concourse.AppendMocks(
+				mockconcourse.JobsForPipeline(pipelineName).RespondsWithJob(jobName, fmt.Sprintf("%s%s", concourse.URL, jobUrl)),
+				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
+				mockconcourse.ResourcesForBuild("/api/v1/builds/1").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
+				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
+			)
+			params := []string{"-url", concourse.URL, "-pipeline", pipelineName}
+			_, logBuffer := runFlakeDetector(params...)
+
+			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
+			Expect(logBuffer).To(gbytes.Say("Job: %s, flakeyness: 1", jobName))
+
+		})
 
 	})
+
 })
 
 func runFlakeDetector(params ...string) (*gexec.Session, *gbytes.Buffer) {
