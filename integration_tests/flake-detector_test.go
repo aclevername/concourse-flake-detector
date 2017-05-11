@@ -77,7 +77,7 @@ var _ = Describe("flake-detector", func() {
 			{
 	"inputs": [
 		{
-			"name": "concourse",gi
+			"name": "concourse",
 			"resource": "concourse",
 			"type": "git",
 			"version": {
