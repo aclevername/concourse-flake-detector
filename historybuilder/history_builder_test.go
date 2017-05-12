@@ -62,7 +62,7 @@ var _ = Describe("historybuilder", func() {
 				},
 			}, nil)
 
-			history, err := historybuilder.GetJobHistory(client, testJob)
+			history, err := historybuilder.GetJobHistory(client, testJob, 0)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(history[0].Status).To(Equal("succeeded"))
@@ -102,7 +102,7 @@ var _ = Describe("historybuilder", func() {
 
 				client.GetBuildsReturns([]concourse.Build{}, errors.New("failed getting build"))
 
-				_, err := historybuilder.GetJobHistory(client, testJob)
+				_, err := historybuilder.GetJobHistory(client, testJob, 0)
 				Expect(err).To(MatchError("failed getting build"))
 			})
 		})
@@ -126,7 +126,7 @@ var _ = Describe("historybuilder", func() {
 
 				client.GetResourcesReturns(concourse.Run{}, errors.New("failed getting resource"))
 
-				_, err := historybuilder.GetJobHistory(client, testJob)
+				_, err := historybuilder.GetJobHistory(client, testJob, 0)
 				Expect(err).To(MatchError("failed getting resource"))
 			})
 		})
