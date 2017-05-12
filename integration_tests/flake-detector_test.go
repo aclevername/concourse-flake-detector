@@ -33,7 +33,7 @@ var _ = Describe("flake-detector", func() {
 			jobName := "test-job"
 			pipelineName := "test-pipeline"
 
-			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"/api/v1/builds/1"},{"status":"failed","api_url":"/api/v1/builds/2"}]`)
 
 			const gitResourcewithVersion = `
 			{
@@ -50,7 +50,7 @@ var _ = Describe("flake-detector", func() {
 	]
 }
 `
-			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
+			jobUrl := fmt.Sprintf("/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
 				mockconcourse.JobsForPipeline(pipelineName, "").RespondsWithJob(jobName, fmt.Sprintf("%s", jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
@@ -71,7 +71,7 @@ var _ = Describe("flake-detector", func() {
 			jobName := "test-job"
 			pipelineName := "test-pipeline"
 
-			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"/api/v1/builds/1"},{"status":"failed","api_url":"/api/v1/builds/2"}]`)
 
 			const gitResourcewithVersion = `
 			{
@@ -88,7 +88,7 @@ var _ = Describe("flake-detector", func() {
 	]
 }
 `
-			jobUrl := fmt.Sprintf("/api/v1/pipelines/%s/jobs/%s", pipelineName, jobName)
+			jobUrl := fmt.Sprintf("/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
 				mockconcourse.JobsForPipeline(pipelineName, "").RespondsWithJob(jobName, fmt.Sprintf("%s", jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),
@@ -111,7 +111,7 @@ var _ = Describe("flake-detector", func() {
 			pipelineName := "test-pipeline"
 			team := "foo"
 
-			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"%s/api/v1/builds/1"},{"status":"failed","api_url":"%s/api/v1/builds/2"}]`, concourse.URL, concourse.URL)
+			buildList := fmt.Sprintf(`[{"status":"succeeded","api_url":"/api/v1/builds/1"},{"status":"failed","api_url":"/api/v1/builds/2"}]`)
 
 			const gitResourcewithVersion = `
 			{
@@ -130,7 +130,7 @@ var _ = Describe("flake-detector", func() {
 `
 			//// example team URL api/v1/teams/main/pipelines/main/jobs/fly/builds
 
-			jobUrl := fmt.Sprintf("/api/v1/teams/foo/pipelines/%s/jobs/%s", pipelineName, jobName)
+			jobUrl := fmt.Sprintf("/teams/foo/pipelines/%s/jobs/%s", pipelineName, jobName)
 			concourse.AppendMocks(
 				mockconcourse.JobsForPipeline(pipelineName, team).RespondsWithJob(jobName, fmt.Sprintf("%s", jobUrl)),
 				mockconcourse.BuildsForJob(jobUrl).RespondsWithBuilds(buildList),

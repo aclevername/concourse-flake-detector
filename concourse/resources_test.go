@@ -30,14 +30,14 @@ var _ = Describe("GetResources", func() {
 
 	It("returns the resources for a build", func() {
 		fakeGet := new(fake.FakeGetter)
-		client := concourse.NewClient(fakeGet.Spy, "fake.com", "")
+		client := concourse.NewClient(fakeGet.Spy, "example.com", "")
 
 		fakeGet.ReturnsOnCall(0, []byte(fmt.Sprintf(gitResourcewithVersion, "version1")), nil)
 		fakeGet.ReturnsOnCall(1, []byte(fmt.Sprintf(gitResourcewithVersion, "version1")), nil)
 
 		run, err := client.GetResources(concourse.Build{
 			Status: "succeeded",
-			URL:    "example.com/builds",
+			URL:    "/builds",
 		})
 
 		Expect(err).NotTo(HaveOccurred())

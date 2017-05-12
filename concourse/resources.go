@@ -27,7 +27,7 @@ type Ref struct {
 
 func (c *client) GetResources(build Build) (Run, error) {
 
-	response, err := c.get(build.URL + "/resources")
+	response, err := c.get(c.baseURL + build.URL + "/resources")
 	if err != nil {
 		return Run{}, err
 	}

@@ -24,6 +24,8 @@ func main() {
 	}
 
 	client := concourse.NewClient(func(url string) ([]byte, error) {
+		//fmt.Println("----------------------------\nSTART\n----------------------------")
+		//fmt.Printf("URL: %s\n", url)
 		response, err := http.Get(url)
 		if err != nil {
 			return nil, err
@@ -31,6 +33,8 @@ func main() {
 		buffer := new(bytes.Buffer)
 		buffer.ReadFrom(response.Body)
 
+		//fmt.Printf("RESPONSE: %s\n", string(buffer.Bytes()))
+		//fmt.Println("----------------------------\nEND\n----------------------------")
 		return buffer.Bytes(), err
 	}, *url, *team)
 
