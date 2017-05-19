@@ -14,6 +14,8 @@ import (
 
 	"io"
 
+	"crypto/tls"
+
 	"github.com/aclevername/concourse-flake-detector/concourse"
 	"github.com/aclevername/concourse-flake-detector/flakedetector"
 	"github.com/aclevername/concourse-flake-detector/historybuilder"
@@ -27,6 +29,7 @@ func main() {
 	count := flag.Int("count", 0, "how many of the latest builds to scan through, optional")
 	bearer := flag.String("bearer", "", "bearer token")
 	debug := flag.Bool("debug", false, "debug flag")
+	skipTls := flag.Bool("insecure-tls", false, "TLS accepts any certificate presented by the server and any host name in that certificate")
 
 	flag.Parse()
 	fmt.Printf("configuration: url %s, pipeline %s\n", *url, *name)
@@ -42,7 +45,7 @@ func main() {
 	}
 
 	var getFunc func(url string) ([]byte, error)
-
+	fmt.Printf("bearer: %s", *bearer)
 	if *bearer != "" {
 		getFunc = func(url string) ([]byte, error) {
 			if *debug {
@@ -52,8 +55,16 @@ func main() {
 			req, err := http.NewRequest("GET", url, nil)
 			req.Header.Add("authorization", bearer)
 
-			client := &http.Client{}
+			var client *http.Client
+			if *skipTls {
+				tr := &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				}
+				client = &http.Client{Transport: tr}
+			} else {
+				client = &http.Client{}
 
+			}
 			response, err := client.Do(req)
 			if err != nil {
 				return nil, err
