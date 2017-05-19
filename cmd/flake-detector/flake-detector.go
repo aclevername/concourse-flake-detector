@@ -26,6 +26,7 @@ func main() {
 	team := flag.String("team", "", "team name, optional")
 	count := flag.Int("count", 0, "how many of the latest builds to scan through, optional")
 	bearer := flag.String("bearer", "", "bearer token")
+	debug := flag.Bool("debug", false, "debug flag")
 
 	flag.Parse()
 	fmt.Printf("configuration: url %s, pipeline %s\n", *url, *name)
@@ -44,6 +45,9 @@ func main() {
 
 	if *bearer != "" {
 		getFunc = func(url string) ([]byte, error) {
+			if *debug {
+				fmt.Println("Get: " + url)
+			}
 			var bearer = "Bearer " + *bearer
 			req, err := http.NewRequest("GET", url, nil)
 			req.Header.Add("authorization", bearer)
@@ -63,6 +67,9 @@ func main() {
 		}
 	} else {
 		getFunc = func(url string) ([]byte, error) {
+			if *debug {
+				fmt.Println("Get: " + url)
+			}
 			response, err := http.Get(url)
 			if err != nil {
 				return nil, err
