@@ -16,6 +16,8 @@ import (
 
 	"crypto/tls"
 
+	"strings"
+
 	"github.com/aclevername/concourse-flake-detector/concourse"
 	"github.com/aclevername/concourse-flake-detector/flakedetector"
 	"github.com/aclevername/concourse-flake-detector/historybuilder"
@@ -32,7 +34,7 @@ func main() {
 	skipTls := flag.Bool("insecure-tls", false, "TLS accepts any certificate presented by the server and any host name in that certificate")
 
 	flag.Parse()
-	fmt.Printf("configuration: url %s, pipeline %s\n", *url, *name)
+	fmt.Printf("\n\nconfiguration: url %s, pipeline %s\n", *url, *name)
 	if *url == "" || *name == "" {
 		panic("please configure correctly using -url and -pipeline")
 	}
@@ -45,7 +47,6 @@ func main() {
 	}
 
 	var getFunc func(url string) ([]byte, error)
-	fmt.Printf("bearer: %s", *bearer)
 	if *bearer != "" {
 		getFunc = func(url string) ([]byte, error) {
 			if *debug {
@@ -67,7 +68,7 @@ func main() {
 			}
 			response, err := client.Do(req)
 			if err != nil {
-				return nil, err
+				return nil, checkInvalidTLS(err)
 			}
 			defer response.Body.Close()
 
@@ -83,7 +84,7 @@ func main() {
 			}
 			response, err := http.Get(url)
 			if err != nil {
-				return nil, err
+				return nil, checkInvalidTLS(err)
 			}
 			body := getBody(response.Body)
 
@@ -143,6 +144,13 @@ func checkAuth(body []byte, bearerAddress string) error {
 		return fmt.Errorf("Please provide a bearer token using the -bearer flag, obtain the token by logging into: %s", bearerAddress)
 	}
 	return nil
+}
+
+func checkInvalidTLS(err error) error {
+	if strings.Contains(err.Error(), "certificate signed by unknown authority") {
+		return fmt.Errorf("It appears your pipeline hasn't configured TLS correctly, in order to proceed add the -insecure-tls flag.")
+	}
+	return err
 }
 
 func exitWithError(err error) {
