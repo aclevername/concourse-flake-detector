@@ -15,7 +15,9 @@ In order to build the flake-detect checkout the repo and run `cd cmd/flake-detec
 
 `-bearer <bearer authentication token>` Optional- Needed if your pipeline is not public. To obtain a bearer token go to `<ci-url>/api/v1/teams/<team>/auth/token`or run the `flake-detector` without the flag configured and it will prompt you with the URL to go to obtain a token.
 
-`-debug <boolean>` Optional- Configure true if you want debug information about what endpoints are being hit.
+`-debug` Optional- Configure true if you want debug information about what endpoints are being hit.
+
+`-insecure-tls` Optional- TLS accepts any certificate presented by the server and any host name in that certificate. Not recommended.
 
 
 
