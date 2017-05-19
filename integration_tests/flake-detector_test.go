@@ -27,7 +27,7 @@ var _ = Describe("flake-detector", func() {
 		concourse.Close()
 	})
 
-	Context("when the job has 1 flakey run", func() {
+	Context("when the job has 0 flakey run", func() {
 
 		It("lists the jobs", func() {
 			jobName := "test-job"
@@ -58,15 +58,15 @@ var _ = Describe("flake-detector", func() {
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v2")),
 			)
 			params := []string{"-url", concourse.URL, "-pipeline", pipelineName}
-			_, logBuffer := runFlakeDetector(params...)
+			_, logBuffer := runFlakeDetector(0, params...)
 
 			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-			Expect(logBuffer).To(gbytes.Say("Job: %s, flakeyness: 0", jobName))
+			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |     0 |", jobName))
 
 		})
 	})
 
-	Context("when the job has 0 flakey runs", func() {
+	Context("when the job has 1 flakey run", func() {
 		It("lists the jobs", func() {
 			jobName := "test-job"
 			pipelineName := "test-pipeline"
@@ -96,10 +96,10 @@ var _ = Describe("flake-detector", func() {
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v1")),
 			)
 			params := []string{"-url", concourse.URL, "-pipeline", pipelineName}
-			_, logBuffer := runFlakeDetector(params...)
+			_, logBuffer := runFlakeDetector(0, params...)
 
 			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-			Expect(logBuffer).To(gbytes.Say("Job: %s, flakeyness: 1", jobName))
+			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |     1 |", jobName))
 
 		})
 
@@ -138,21 +138,50 @@ var _ = Describe("flake-detector", func() {
 				mockconcourse.ResourcesForBuild("/api/v1/builds/2").RespondsWith(fmt.Sprintf(gitResourcewithVersion, "v2")),
 			)
 			params := []string{"-url", concourse.URL, "-pipeline", pipelineName, "-team", team}
-			_, logBuffer := runFlakeDetector(params...)
+			_, logBuffer := runFlakeDetector(0, params...)
 
 			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-			Expect(logBuffer).To(gbytes.Say("Job: %s, flakeyness: 0", jobName))
+			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |     0 |", jobName))
 
+		})
+	})
+
+	Context("when the get request returns not authorized", func() {
+		It("tells the user how to authenticate with the team", func() {
+			pipelineName := "test-pipeline"
+			team := "foo"
+
+			concourse.AppendMocks(
+				mockconcourse.JobsForPipeline(pipelineName, team).RespondsUnauthorizedWith("not authorized"),
+			)
+			params := []string{"-url", concourse.URL, "-pipeline", pipelineName, "-team", team}
+			_, logBuffer := runFlakeDetector(1, params...)
+
+			expectedMsg := fmt.Sprintf("Please provide a bearer token using the -bearer flag, obtain the token by logging into: %s/api/v1/teams/%s/auth/token", concourse.URL, team)
+			Expect(logBuffer).To(gbytes.Say(expectedMsg))
+		})
+
+		It("tells the user how to authenticate with no team", func() {
+			pipelineName := "test-pipeline"
+
+			concourse.AppendMocks(
+				mockconcourse.JobsForPipeline(pipelineName, "").RespondsUnauthorizedWith("not authorized"),
+			)
+			params := []string{"-url", concourse.URL, "-pipeline", pipelineName}
+			_, logBuffer := runFlakeDetector(1, params...)
+
+			expectedMsg := fmt.Sprintf("Please provide a bearer token using the -bearer flag, obtain the token by logging into: %s/api/v1/auth/token", concourse.URL)
+			Expect(logBuffer).To(gbytes.Say(expectedMsg))
 		})
 	})
 
 })
 
-func runFlakeDetector(params ...string) (*gexec.Session, *gbytes.Buffer) {
+func runFlakeDetector(exitcode int, params ...string) (*gexec.Session, *gbytes.Buffer) {
 	cmd := exec.Command(deleter, params...)
 	logBuffer := gbytes.NewBuffer()
 	session, err := gexec.Start(cmd, io.MultiWriter(GinkgoWriter, logBuffer), GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(session, 10*time.Second).Should(gexec.Exit(0))
+	Eventually(session, 10*time.Second).Should(gexec.Exit(exitcode))
 	return session, logBuffer
 }

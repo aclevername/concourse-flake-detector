@@ -12,6 +12,8 @@ import (
 
 	"strconv"
 
+	"io"
+
 	"github.com/aclevername/concourse-flake-detector/concourse"
 	"github.com/aclevername/concourse-flake-detector/flakedetector"
 	"github.com/aclevername/concourse-flake-detector/historybuilder"
@@ -30,73 +32,72 @@ func main() {
 	if *url == "" || *name == "" {
 		panic("please configure correctly using -url and -pipeline")
 	}
+	var bearerURL string
+	if *team != "" {
+		bearerURL = fmt.Sprintf("%s/api/v1/teams/%s/auth/token", *url, *team)
+	} else {
+		bearerURL = fmt.Sprintf("%s/api/v1/auth/token", *url)
 
-	client := concourse.NewClient(func(url string) ([]byte, error) {
-		fmt.Println("----------------------------\nSTART\n----------------------------")
-		fmt.Printf("URL: %s\n", url)
-		//response, err := http.Get(url)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//buffer := new(bytes.Buffer)
-		//buffer.ReadFrom(response.Body)
-		//
-		////fmt.Printf("RESPONSE: %s\n", string(buffer.Bytes()))
-		////fmt.Println("----------------------------\nEND\n----------------------------")
-		//return buffer.Bytes(), err
+	}
 
-		var bearer = "Bearer " + *bearer
-		req, err := http.NewRequest("GET", url, nil)
-		req.Header.Add("authorization", bearer)
+	var getFunc func(url string) ([]byte, error)
 
-		client := &http.Client{}
+	if *bearer != "" {
+		getFunc = func(url string) ([]byte, error) {
+			var bearer = "Bearer " + *bearer
+			req, err := http.NewRequest("GET", url, nil)
+			req.Header.Add("authorization", bearer)
 
-		response, err := client.Do(req)
-		if err != nil {
-			panic(err)
+			client := &http.Client{}
+
+			response, err := client.Do(req)
+			if err != nil {
+				return nil, err
+			}
+			defer response.Body.Close()
+
+			body := getBody(response.Body)
+
+			return body, checkAuth(body, bearerURL)
+
 		}
-		defer response.Body.Close()
+	} else {
+		getFunc = func(url string) ([]byte, error) {
+			response, err := http.Get(url)
+			if err != nil {
+				return nil, err
+			}
+			body := getBody(response.Body)
 
-		buffer := new(bytes.Buffer)
-		buffer.ReadFrom(response.Body)
+			return body, checkAuth(body, bearerURL)
+		}
+	}
 
-		//fmt.Printf("RESPONSE: %s\n", string(buffer.Bytes()))
-		//fmt.Println("----------------------------\nEND\n----------------------------")
-		return buffer.Bytes(), err
-	}, *url, *team)
+	client := concourse.NewClient(getFunc, *url, *team)
 
 	pipeline, err := client.GetPipeline(*name)
 
-	//results := map[string]flake{}
+	if err != nil {
+		exitWithError(err)
+	}
+
 	results := make([][]string, 0)
 
-	if err != nil {
-		panic(err)
-	}
 	for _, job := range pipeline.Jobs() {
 
 		jobHistory, err := historybuilder.GetJobHistory(client, job, *count)
 		if err != nil {
-			panic(err)
+			exitWithError(err)
 		}
 
 		jobFlakeCount, err := flakedetector.Detect(jobHistory)
 		if err != nil {
-			panic(err)
+			exitWithError(err)
 		}
 
 		results = append(results, []string{job.Name, strconv.Itoa(len(jobHistory)), strconv.Itoa(jobFlakeCount)})
-		//results[job.Name] = flake{
-		//	total: len(jobHistory),
-		//	count: jobFlakeCount,
-		//}
-		//fmt.Printf("\n----Result-----\nPipeline: %s\n", *name)
-		//fmt.Printf("Job: %s, total runs: %d, flakeyness: %d\n", job.Name, len(jobHistory), jobFlakeCount)
 	}
 
-	//for jobName, result := range results {
-	//	fmt.Printf("Job: %s, total runs: %d, flakeyness: %d\n", jobName, result.total, result.count)
-	//}
 	fmt.Println(results)
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "builds", "flake"})
@@ -104,10 +105,29 @@ func main() {
 	for _, v := range results {
 		table.Append(v)
 	}
-	table.Render() // Send output
+	fmt.Println("Pipeline: " + *name)
+	table.Render()
 }
 
 type flake struct {
 	count int
 	total int
+}
+
+func getBody(body io.ReadCloser) []byte {
+	buffer := new(bytes.Buffer)
+	buffer.ReadFrom(body)
+	return buffer.Bytes()
+}
+
+func checkAuth(body []byte, bearerAddress string) error {
+	if bytes.Contains(body, []byte("not authorized")) {
+		return fmt.Errorf("Please provide a bearer token using the -bearer flag, obtain the token by logging into: %s", bearerAddress)
+	}
+	return nil
+}
+
+func exitWithError(err error) {
+	fmt.Println(err)
+	os.Exit(1)
 }

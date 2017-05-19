@@ -90,13 +90,6 @@ var _ = Describe("historybuilder", func() {
 
 		Context("when getting the job builds fails", func() {
 			It("returns an error", func() {
-				//client := new(clientfake.FakeClient)
-				//testJob := concourse.Job{Name: "test-job", URL: "/teams/main/pipelines/main/jobs/fly"}
-				//
-				//buildList := `[{"status":"succeeded","api_url":"/concourse/v1/builds/1"},{"status":"failed","api_url":"/concourse/v1/builds/2"}]`
-				//client.GetReturnsOnCall(0, []byte(buildList), nil)
-				//client.GetReturnsOnCall(1, []byte{}, errors.New("failed"))
-
 				client := new(fake.FakeClientInterface)
 				testJob := concourse.Job{Name: "test-job", URL: "/teams/main/pipelines/main/jobs/fly"}
 
