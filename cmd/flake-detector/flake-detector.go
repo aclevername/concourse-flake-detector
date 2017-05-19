@@ -107,7 +107,7 @@ func main() {
 
 	fmt.Println(results)
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "builds", "flake"})
+	table.SetHeader([]string{"Name", "builds", "flakes"})
 
 	for _, v := range results {
 		table.Append(v)

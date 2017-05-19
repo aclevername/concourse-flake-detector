@@ -61,7 +61,7 @@ var _ = Describe("flake-detector", func() {
 			_, logBuffer := runFlakeDetector(0, params...)
 
 			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |     0 |", jobName))
+			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |      0 |", jobName))
 
 		})
 	})
@@ -99,7 +99,7 @@ var _ = Describe("flake-detector", func() {
 			_, logBuffer := runFlakeDetector(0, params...)
 
 			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |     1 |", jobName))
+			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |      1 |", jobName))
 
 		})
 
@@ -141,7 +141,7 @@ var _ = Describe("flake-detector", func() {
 			_, logBuffer := runFlakeDetector(0, params...)
 
 			Expect(logBuffer).To(gbytes.Say("Pipeline: %s", pipelineName))
-			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |     0 |", jobName))
+			Expect(string(logBuffer.Contents())).To(ContainSubstring("%s |      2 |      0 |", jobName))
 
 		})
 	})
