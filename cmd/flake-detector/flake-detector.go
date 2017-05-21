@@ -26,7 +26,7 @@ import (
 
 func main() {
 	url := flag.String("url", "", "concourse url")
-	name := flag.String("pipeline", "", "pipeline name")
+	pipelineName := flag.String("pipeline", "", "pipeline pipelineName")
 	team := flag.String("team", "", "team name, optional")
 	count := flag.Int("count", 0, "how many of the latest builds to scan through, optional")
 	bearer := flag.String("bearer", "", "bearer token")
@@ -34,67 +34,29 @@ func main() {
 	skipTls := flag.Bool("insecure-tls", false, "TLS accepts any certificate presented by the server and any host name in that certificate")
 
 	flag.Parse()
-	fmt.Printf("\n\nconfiguration: url %s, pipeline %s\n", *url, *name)
-	if *url == "" || *name == "" {
-		panic("please configure correctly using -url and -pipeline")
+	fmt.Printf("\n\nconfiguration: url %s, pipeline %s\n", *url, *pipelineName)
+	if *url == "" || *pipelineName == "" {
+		exitWithError(fmt.Errorf("please configure correctly using -url and -pipeline"))
 	}
 	var bearerURL string
 	if *team != "" {
 		bearerURL = fmt.Sprintf("%s/api/v1/teams/%s/auth/token", *url, *team)
 	} else {
 		bearerURL = fmt.Sprintf("%s/api/v1/auth/token", *url)
-
 	}
 
 	var getFunc func(url string) ([]byte, error)
+
 	if *bearer != "" {
-		getFunc = func(url string) ([]byte, error) {
-			if *debug {
-				fmt.Println("Get: " + url)
-			}
-			var bearer = "Bearer " + *bearer
-			req, err := http.NewRequest("GET", url, nil)
-			req.Header.Add("authorization", bearer)
-
-			var client *http.Client
-			if *skipTls {
-				tr := &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-				}
-				client = &http.Client{Transport: tr}
-			} else {
-				client = &http.Client{}
-
-			}
-			response, err := client.Do(req)
-			if err != nil {
-				return nil, checkInvalidTLS(err)
-			}
-			defer response.Body.Close()
-
-			body := getBody(response.Body)
-
-			return body, checkAuth(body, bearerURL)
-
-		}
+		getFunc = clientWithBearer(*bearer, bearerURL, *debug, *skipTls)
 	} else {
-		getFunc = func(url string) ([]byte, error) {
-			if *debug {
-				fmt.Println("Get: " + url)
-			}
-			response, err := http.Get(url)
-			if err != nil {
-				return nil, checkInvalidTLS(err)
-			}
-			body := getBody(response.Body)
+		getFunc = client(bearerURL, *debug)
 
-			return body, checkAuth(body, bearerURL)
-		}
 	}
 
 	client := concourse.NewClient(getFunc, *url, *team)
 
-	pipeline, err := client.GetPipeline(*name)
+	pipeline, err := client.GetPipeline(*pipelineName)
 
 	if err != nil {
 		exitWithError(err)
@@ -117,15 +79,7 @@ func main() {
 		results = append(results, []string{job.Name, strconv.Itoa(len(jobHistory)), strconv.Itoa(jobFlakeCount)})
 	}
 
-	fmt.Println(results)
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "builds", "flakes"})
-
-	for _, v := range results {
-		table.Append(v)
-	}
-	fmt.Println("Pipeline: " + *name)
-	table.Render()
+	print(results, *pipelineName)
 }
 
 type flake struct {
@@ -156,4 +110,62 @@ func checkInvalidTLS(err error) error {
 func exitWithError(err error) {
 	fmt.Println(err)
 	os.Exit(1)
+}
+
+func clientWithBearer(bearer, bearerURL string, debug, skipTLS bool) func(url string) ([]byte, error) {
+	return func(url string) ([]byte, error) {
+		if debug {
+			fmt.Println("Get: " + url)
+		}
+		var bearer = "Bearer " + bearer
+		req, err := http.NewRequest("GET", url, nil)
+		req.Header.Add("authorization", bearer)
+
+		var client *http.Client
+		if skipTLS {
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			client = &http.Client{Transport: tr}
+		} else {
+			client = &http.Client{}
+
+		}
+		response, err := client.Do(req)
+		if err != nil {
+			return nil, checkInvalidTLS(err)
+		}
+		defer response.Body.Close()
+
+		body := getBody(response.Body)
+
+		return body, checkAuth(body, bearerURL)
+
+	}
+}
+
+func client(bearerURL string, debug bool) func(url string) ([]byte, error) {
+	return func(url string) ([]byte, error) {
+		if debug {
+			fmt.Println("Get: " + url)
+		}
+		response, err := http.Get(url)
+		if err != nil {
+			return nil, checkInvalidTLS(err)
+		}
+		body := getBody(response.Body)
+
+		return body, checkAuth(body, bearerURL)
+	}
+}
+
+func print(results [][]string, pipeline string) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "builds", "flakes"})
+
+	for _, v := range results {
+		table.Append(v)
+	}
+	fmt.Println("Pipeline: " + pipeline)
+	table.Render()
 }
