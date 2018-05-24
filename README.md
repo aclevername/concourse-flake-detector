@@ -23,7 +23,7 @@ In order to build the flake-detect checkout the repo and run `cd cmd/flake-detec
 
  ##### Examples
 
-`./flake-detector -team main -pipeline main -url https://ci.concourse.ci`
+`./flake-detector -team main -pipeline main -url https://ci.concourse-ci.org`
 
 ```
 +------------------------+--------+--------+
