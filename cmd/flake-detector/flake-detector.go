@@ -25,34 +25,13 @@ import (
 )
 
 func main() {
-	url := flag.String("url", "", "concourse url")
-	pipelineName := flag.String("pipeline", "", "pipeline pipelineName")
-	team := flag.String("team", "", "team name, optional")
-	count := flag.Int("count", 0, "how many of the latest builds to scan through, optional")
-	bearer := flag.String("bearer", "", "bearer token")
-	debug := flag.Bool("debug", false, "debug flag")
-	skipTls := flag.Bool("insecure-tls", false, "TLS accepts any certificate presented by the server and any host name in that certificate")
+	url, pipelineName, team, count, bearer, debug, skipTls := initialiseFlags()
 
 	flag.Parse()
-	fmt.Printf("\n\nconfiguration: url %s, pipeline %s\n", *url, *pipelineName)
-	if *url == "" || *pipelineName == "" {
-		exitWithError(fmt.Errorf("please configure correctly using -url and -pipeline"))
-	}
-	var bearerURL string
-	if *team != "" {
-		bearerURL = fmt.Sprintf("%s/api/v1/teams/%s/auth/token", *url, *team)
-	} else {
-		bearerURL = fmt.Sprintf("%s/api/v1/auth/token", *url)
-	}
 
-	var getFunc func(url string) ([]byte, error)
+	checkConfiguredCorrectly(url, pipelineName)
 
-	if *bearer != "" {
-		getFunc = clientWithBearer(*bearer, bearerURL, *debug, *skipTls)
-	} else {
-		getFunc = client(bearerURL, *debug)
-
-	}
+	getFunc := intitaliseBearer(team, url, bearer, debug, skipTls)
 
 	client := concourse.NewClient(getFunc, *url, *team)
 
@@ -62,8 +41,20 @@ func main() {
 		exitWithError(err)
 	}
 
-	results := make([][]string, 0)
+	results := scanConcourse(pipeline, client, count)
 
+	print(results, *pipelineName)
+}
+
+func checkConfiguredCorrectly(url *string, pipelineName *string) {
+	fmt.Printf("\n\nconfiguration: url %s, pipeline %s\n", *url, *pipelineName)
+	if *url == "" || *pipelineName == "" {
+		exitWithError(fmt.Errorf("please configure correctly using -url and -pipeline"))
+	}
+}
+
+func scanConcourse(pipeline concourse.Pipeline, client concourse.ClientInterface, count *int) [][]string {
+	results := make([][]string, 0)
 	for _, job := range pipeline.Jobs() {
 
 		jobHistory, err := historybuilder.GetJobHistory(client, job, *count)
@@ -78,8 +69,35 @@ func main() {
 
 		results = append(results, []string{job.Name, strconv.Itoa(len(jobHistory)), strconv.Itoa(jobFlakeCount)})
 	}
+	return results
+}
 
-	print(results, *pipelineName)
+func intitaliseBearer(team *string, url *string, bearer *string, debug *bool, skipTls *bool) func(url string) ([]byte, error) {
+	var bearerURL string
+	if *team != "" {
+		bearerURL = fmt.Sprintf("%s/api/v1/teams/%s/auth/token", *url, *team)
+	} else {
+		bearerURL = fmt.Sprintf("%s/api/v1/auth/token", *url)
+	}
+	var getFunc func(url string) ([]byte, error)
+	if *bearer != "" {
+		getFunc = clientWithBearer(*bearer, bearerURL, *debug, *skipTls)
+	} else {
+		getFunc = client(bearerURL, *debug)
+
+	}
+	return getFunc
+}
+
+func initialiseFlags() (*string, *string, *string, *int, *string, *bool, *bool) {
+	url := flag.String("url", "", "concourse url")
+	pipelineName := flag.String("pipeline", "", "pipeline pipelineName")
+	team := flag.String("team", "", "team name, optional")
+	count := flag.Int("count", 0, "how many of the latest builds to scan through, optional")
+	bearer := flag.String("bearer", "", "bearer token")
+	debug := flag.Bool("debug", false, "debug flag")
+	skipTls := flag.Bool("insecure-tls", false, "TLS accepts any certificate presented by the server and any host name in that certificate")
+	return url, pipelineName, team, count, bearer, debug, skipTls
 }
 
 type flake struct {
